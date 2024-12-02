@@ -27,14 +27,12 @@ fun main() {
 }
 
 private fun List<String>.isReportSafe(): Boolean {
-    val maxVariance = 1 to 3
+    val maxVariance = 1..3
 
     var descending: Boolean? = null
-    for ((index, value) in withIndex()) {
-        val nextValue = (if (index + 1 < this.size) this[index + 1] else null) ?: break
-
-        val diff = value.toInt() - nextValue.toInt()
-        val isVarianceInRange = (abs(diff) >= maxVariance.first && abs(diff) <= maxVariance.second)
+    this.zipWithNext { a, b ->
+        val diff = a.toInt() - b.toInt()
+        val isVarianceInRange = abs(diff) in maxVariance
 
         val currentDescending = diff < 0
         val hasChangedDirection = (descending != null && currentDescending != descending)
@@ -49,17 +47,11 @@ private fun List<String>.isReportSafe(): Boolean {
 
 private fun List<String>.isReportSafeTolerating1(): Boolean {
     if (!isReportSafe()) {
-        return (0..this.size).any { isReportSafeIgnoringIndex(it) }
+        return this.indices.any { isReportSafeIgnoringIndex(it) }
     }
     return true
 }
 
 private fun List<String>.isReportSafeIgnoringIndex(ignoreIndex: Int): Boolean {
-    val newList = mutableListOf<String>()
-    this.forEachIndexed { index, it ->
-        if (index != ignoreIndex) {
-            newList.add(it)
-        }
-    }
-    return newList.isReportSafe()
+    return this.filterIndexed { index, _ -> index != ignoreIndex }.isReportSafe()
 }
